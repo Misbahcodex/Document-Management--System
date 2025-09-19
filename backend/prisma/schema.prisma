@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model SystemAdmin {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  categories   Category[]
+  folders      Folder[]
+  documents    Document[]
+  documentVersions DocumentVersion[]
+
+  @@map("system_admins")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  accessControls   AccessControl[]
+  folders          Folder[]
+  documents        Document[]
+  documentVersions DocumentVersion[]
+
+  @@map("users")
+}
+
+model Category {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Foreign Keys
+  createdByAdminId String
+  createdByAdmin   SystemAdmin @relation(fields: [createdByAdminId], references: [id])
+
+  // Relations
+  folders        Folder[]
+  accessControls AccessControl[]
+
+  @@map("categories")
+}
+
+model Folder {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerType   String   // "system_admin" or "user"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Foreign Keys
+  categoryId       String
+  category         Category @relation(fields: [categoryId], references: [id])
+  createdByAdminId String?
+  createdByAdmin   SystemAdmin? @relation(fields: [createdByAdminId], references: [id])
+  createdByUserId  String?
+  createdByUser    User? @relation(fields: [createdByUserId], references: [id])
+
+  // Relations
+  documents Document[]
+
+  @@map("folders")
+}
+
+model Document {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  cloudinaryUrl String
+  fileType      String
+  fileSize      Int?
+  ownerType     String   // "system_admin" or "user"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Foreign Keys
+  folderId         String
+  folder           Folder @relation(fields: [folderId], references: [id])
+  uploadedByAdminId String?
+  uploadedByAdmin   SystemAdmin? @relation(fields: [uploadedByAdminId], references: [id])
+  uploadedByUserId  String?
+  uploadedByUser    User? @relation(fields: [uploadedByUserId], references: [id])
+
+  // Relations
+  versions DocumentVersion[]
+
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id            String   @id @default(cuid())
+  versionNumber Int
+  cloudinaryUrl String
+  fileType      String
+  fileSize      Int?
+  changeLog     String?
+  createdAt     DateTime @default(now())
+
+  // Foreign Keys
+  documentId        String
+  document          Document @relation(fields: [documentId], references: [id])
+  uploadedByAdminId String?
+  uploadedByAdmin   SystemAdmin? @relation(fields: [uploadedByAdminId], references: [id])
+  uploadedByUserId  String?
+  uploadedByUser    User? @relation(fields: [uploadedByUserId], references: [id])
+
+  @@map("document_versions")
+}
+
+model AccessControl {
+  id         String   @id @default(cuid())
+  accessType String   // "full" or "read-only"
+  grantedAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Foreign Keys
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  userId     String
+  user       User @relation(fields: [userId], references: [id])
+
+  @@unique([categoryId, userId])
+  @@map("access_controls")
+}
