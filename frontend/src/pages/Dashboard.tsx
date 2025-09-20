@@ -98,9 +98,11 @@ const Dashboard: React.FC = () => {
     const allowedTypes = [
       'application/pdf',
       'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ];
-    const allowedExtensions = ['.pdf', '.doc', '.docx'];
+    const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
     
     return allowedTypes.includes(file.type) && allowedExtensions.includes(fileExtension);
@@ -112,7 +114,7 @@ const Dashboard: React.FC = () => {
 
     // Validate file type
     if (!validateFile(uploadFile)) {
-      setError('Invalid file type. Only Word (.doc, .docx) and PDF files are allowed.');
+      setError('Invalid file type. Only Word (.doc, .docx), PDF, and Excel (.xls, .xlsx) files are allowed.');
       return;
     }
 
@@ -154,7 +156,7 @@ const Dashboard: React.FC = () => {
 
     // Validate file type
     if (!validateFile(newVersionFile)) {
-      setError('Invalid file type. Only Word (.doc, .docx) and PDF files are allowed.');
+      setError('Invalid file type. Only Word (.doc, .docx), PDF, and Excel (.xls, .xlsx) files are allowed.');
       return;
     }
 
@@ -481,7 +483,7 @@ const Dashboard: React.FC = () => {
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
                     if (file && !validateFile(file)) {
-                      setError('Invalid file type. Only Word (.doc, .docx) and PDF files are allowed.');
+                      setError('Invalid file type. Only Word (.doc, .docx), PDF, and Excel (.xls, .xlsx) files are allowed.');
                       e.target.value = '';
                       return;
                     }
@@ -489,9 +491,9 @@ const Dashboard: React.FC = () => {
                     setError('');
                   }}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
                 />
-                <p className="text-xs text-gray-500 mt-1">Only Word (.doc, .docx) and PDF files are allowed</p>
+                <p className="text-xs text-gray-500 mt-1">Only Word (.doc, .docx), PDF, and Excel (.xls, .xlsx) files are allowed</p>
               </div>
               <div className="flex justify-end space-x-3">
                 <button
@@ -631,7 +633,7 @@ const Dashboard: React.FC = () => {
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
                     if (file && !validateFile(file)) {
-                      setError('Invalid file type. Only Word (.doc, .docx) and PDF files are allowed.');
+                      setError('Invalid file type. Only Word (.doc, .docx), PDF, and Excel (.xls, .xlsx) files are allowed.');
                       e.target.value = '';
                       return;
                     }
@@ -639,9 +641,9 @@ const Dashboard: React.FC = () => {
                     setError('');
                   }}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
                 />
-                <p className="text-xs text-gray-500 mt-1">Only Word (.doc, .docx) and PDF files are allowed</p>
+                <p className="text-xs text-gray-500 mt-1">Only Word (.doc, .docx), PDF, and Excel (.xls, .xlsx) files are allowed</p>
               </div>
               <div className="flex justify-end space-x-3">
                 <button

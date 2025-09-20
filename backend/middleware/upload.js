@@ -5,20 +5,22 @@ const path = require('path');
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  // Allow only Word and PDF files
+  // Allow Word, PDF, and Excel files
   const allowedMimes = [
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   ];
 
-  const allowedExtensions = ['.pdf', '.doc', '.docx'];
+  const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
   const fileExtension = path.extname(file.originalname).toLowerCase();
 
   if (allowedMimes.includes(file.mimetype) && allowedExtensions.includes(fileExtension)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only Word (.doc, .docx) and PDF files are allowed.'), false);
+    cb(new Error('Invalid file type. Only Word (.doc, .docx), PDF, and Excel (.xls, .xlsx) files are allowed.'), false);
   }
 };
 

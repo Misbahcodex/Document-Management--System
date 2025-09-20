@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Category, User } from '../types';
-import { categoriesAPI, accessAPI } from '../utils/api';
+import { Category, User, Folder } from '../types';
+import { categoriesAPI, accessAPI, foldersAPI, documentsAPI } from '../utils/api';
 import { 
   LogOut, 
   Plus,
@@ -10,7 +10,8 @@ import {
   Shield,
   Settings,
   FolderOpen,
-  BarChart3
+  BarChart3,
+  Upload
 } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
@@ -22,6 +23,9 @@ const AdminDashboard: React.FC = () => {
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [showAccessControl, setShowAccessControl] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [showUploadDocument, setShowUploadDocument] = useState(false);
+  const [availableFolders, setAvailableFolders] = useState<Folder[]>([]);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadData();
@@ -92,6 +96,58 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const validateFile = (file: File): boolean => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    
+    return allowedTypes.includes(file.type) && allowedExtensions.includes(fileExtension);
+  };
+
+  const loadFolders = async (categoryId: string) => {
+    try {
+      const response = await foldersAPI.getByCategory(categoryId);
+      setAvailableFolders(response.folders);
+    } catch (error: any) {
+      setError('Failed to load folders');
+    }
+  };
+
+  const handleUploadDocument = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!uploadFile) return;
+
+    // Validate file type
+    if (!validateFile(uploadFile)) {
+      setError('Invalid file type. Only Word (.doc, .docx), PDF, and Excel (.xls, .xlsx) files are allowed.');
+      return;
+    }
+
+    const formData = new FormData(e.currentTarget);
+    try {
+      await documentsAPI.create({
+        title: formData.get('title') as string,
+        description: formData.get('description') as string,
+        folderId: formData.get('folderId') as string,
+        file: uploadFile,
+      });
+      setShowUploadDocument(false);
+      setUploadFile(null);
+      setAvailableFolders([]);
+      setError('');
+      // Show success message
+      alert('Document uploaded successfully!');
+    } catch (error: any) {
+      setError('Failed to upload document: ' + (error.response?.data?.error || error.message));
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -115,6 +171,13 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-gray-700">Welcome, {user?.name}</span>
+              <button
+                onClick={() => setShowUploadDocument(true)}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Document
+              </button>
               <button
                 onClick={logout}
                 className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
@@ -399,6 +462,114 @@ const AdminDashboard: React.FC = () => {
                   className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
                 >
                   Grant Access
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Document Modal */}
+      {showUploadDocument && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium mb-4">Upload Document</h3>
+            <form onSubmit={handleUploadDocument} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Document Title</label>
+                <input
+                  name="title"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  name="description"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Category</label>
+                <select
+                  required
+                  onChange={(e) => {
+                    const categoryId = e.target.value;
+                    if (categoryId) {
+                      loadFolders(categoryId);
+                    } else {
+                      setAvailableFolders([]);
+                    }
+                  }}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="">Select a category...</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Folder</label>
+                <select
+                  name="folderId"
+                  required
+                  disabled={availableFolders.length === 0}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
+                >
+                  <option value="">Select a folder...</option>
+                  {availableFolders.map((folder) => (
+                    <option key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </option>
+                  ))}
+                </select>
+                {availableFolders.length === 0 && (
+                  <p className="text-xs text-gray-500 mt-1">Please select a category first</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">File</label>
+                <input
+                  type="file"
+                  required
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    if (file && !validateFile(file)) {
+                      setError('Invalid file type. Only Word (.doc, .docx), PDF, and Excel (.xls, .xlsx) files are allowed.');
+                      e.target.value = '';
+                      return;
+                    }
+                    setUploadFile(file);
+                    setError('');
+                  }}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                />
+                <p className="text-xs text-gray-500 mt-1">Only Word (.doc, .docx), PDF, and Excel (.xls, .xlsx) files are allowed</p>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUploadDocument(false);
+                    setUploadFile(null);
+                    setAvailableFolders([]);
+                    setError('');
+                  }}
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Upload Document
                 </button>
               </div>
             </form>
