@@ -189,6 +189,26 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleViewDocument = (url: string, fileType: string, title: string) => {
+    // For PDFs, open directly in browser
+    if (fileType === 'application/pdf' || url.includes('.pdf')) {
+      window.open(url, '_blank');
+      return;
+    }
+    
+    // For Word documents, try to open in browser but warn user
+    if (fileType.includes('word') || fileType.includes('document') || 
+        url.includes('.doc') || url.includes('.docx')) {
+      // Some browsers can't display Word docs, so we'll open the URL
+      // but the user might need to download it instead
+      window.open(url, '_blank');
+      return;
+    }
+    
+    // For other files, just open the URL
+    window.open(url, '_blank');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -346,14 +366,22 @@ const Dashboard: React.FC = () => {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <button
-                                    onClick={() => window.open(document.cloudinaryUrl, '_blank')}
+                                    onClick={() => handleViewDocument(document.cloudinaryUrl, document.fileType, document.title)}
                                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"
                                     title="View"
                                   >
                                     <Eye className="h-4 w-4" />
                                   </button>
                                   <button
-                                    onClick={() => window.open(document.cloudinaryUrl, '_blank')}
+                                    onClick={() => {
+                                      const link = document.createElement('a');
+                                      link.href = document.cloudinaryUrl;
+                                      link.download = document.title || 'document';
+                                      link.target = '_blank';
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                    }}
                                     className="p-2 text-green-600 hover:bg-green-50 rounded-md"
                                     title="Download"
                                   >
@@ -536,14 +564,22 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => window.open(version.cloudinaryUrl, '_blank')}
+                        onClick={() => handleViewDocument(version.cloudinaryUrl, version.fileType, selectedDocument?.title || 'document')}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"
                         title="View"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => window.open(version.cloudinaryUrl, '_blank')}
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = version.cloudinaryUrl;
+                          link.download = selectedDocument?.title || 'document';
+                          link.target = '_blank';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
                         className="p-2 text-green-600 hover:bg-green-50 rounded-md"
                         title="Download"
                       >
