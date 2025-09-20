@@ -5,7 +5,6 @@ import { categoriesAPI, accessAPI } from '../utils/api';
 import { 
   LogOut, 
   Plus,
-  Edit,
   Trash2,
   Users,
   Shield,
