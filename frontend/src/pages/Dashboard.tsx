@@ -374,13 +374,13 @@ const Dashboard: React.FC = () => {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      const link = document.createElement('a');
+                                      const link = window.document.createElement('a');
                                       link.href = document.cloudinaryUrl;
                                       link.download = document.title || 'document';
                                       link.target = '_blank';
-                                      document.body.appendChild(link);
+                                      window.document.body.appendChild(link);
                                       link.click();
-                                      document.body.removeChild(link);
+                                      window.document.body.removeChild(link);
                                     }}
                                     className="p-2 text-green-600 hover:bg-green-50 rounded-md"
                                     title="Download"
@@ -572,13 +572,13 @@ const Dashboard: React.FC = () => {
                       </button>
                       <button
                         onClick={() => {
-                          const link = document.createElement('a');
+                          const link = window.document.createElement('a');
                           link.href = version.cloudinaryUrl;
                           link.download = selectedDocument?.title || 'document';
                           link.target = '_blank';
-                          document.body.appendChild(link);
+                          window.document.body.appendChild(link);
                           link.click();
-                          document.body.removeChild(link);
+                          window.document.body.removeChild(link);
                         }}
                         className="p-2 text-green-600 hover:bg-green-50 rounded-md"
                         title="Download"
